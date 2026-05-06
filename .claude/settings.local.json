@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build *)",
+      "Bash(xargs grep *)",
+      "Bash(cd /tmp)",
+      "Bash(cp C:/Users/metal/AppData/Local/dotnet-android/MavenCacheDirectory/central/com.yandex.android/mobileads/7.7.0/mobileads-7.7.0.aar .)",
+      "Bash(unzip -l mobileads-7.7.0.aar)",
+      "Bash(unzip -p mobileads-7.7.0.aar classes.jar)",
+      "Bash(unzip -l /dev/stdin)",
+      "Bash(xargs -I{} dirname {})"
+    ]
+  }
+}

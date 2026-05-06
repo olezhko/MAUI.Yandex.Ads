@@ -1,0 +1,23 @@
+<metadata>
+  <!--
+    BannerAdView extends the obfuscated internal class jl0 (which extends RelativeLayout).
+    The binding generator skips the entire impl package, so jl0 has no C# type.
+    Re-parent BannerAdView directly to android.widget.RelativeLayout so it gets generated.
+  -->
+  <attr path="/api/package[@name='com.yandex.mobile.ads.banner']/class[@name='BannerAdView']"
+        name="extends">android.widget.RelativeLayout</attr>
+
+  <!--
+    BannerAdSize extends the obfuscated internal class rf1 (which extends Object).
+    Same fix: re-parent to java.lang.Object.
+  -->
+  <attr path="/api/package[@name='com.yandex.mobile.ads.banner']/class[@name='BannerAdSize']"
+        name="extends">java.lang.Object</attr>
+
+  <!--
+    CallToActionView.getText() is generated as `override TextFormatted`, but
+    TextView.TextFormatted is not marked virtual in the Android bindings.
+    Remove the method to prevent CS0506.
+  -->
+  <remove-node path="/api/package[@name='com.monetization.ads.fullscreen.template.view']/class[@name='CallToActionView']/method[@name='getText' and count(parameter)=0]" />
+</metadata>

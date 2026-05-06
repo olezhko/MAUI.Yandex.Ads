@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="MAUI.Yandex.Ads.Sample/MAUI.Yandex.Ads.Sample.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
+  <Project Path="MAUI.Yandex.Ads/MAUI.Yandex.Ads.csproj" />
+</Solution>
