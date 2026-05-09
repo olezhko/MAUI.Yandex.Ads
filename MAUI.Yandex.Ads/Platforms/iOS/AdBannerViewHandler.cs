@@ -1,9 +1,10 @@
 ﻿using Microsoft.Maui.Handlers;
+using MAUI.Yandex.Ads.iOS.Binding;
 
 namespace MAUI.Yandex.Ads;
 
 public partial class AdBannerViewHandler
-    : ViewHandler<AdBannerView, YMABannerAdView>
+    : ViewHandler<AdBannerView, YMANativeBannerView>
 {
     public static IPropertyMapper<AdBannerView, AdBannerViewHandler> Mapper =
         new PropertyMapper<AdBannerView, AdBannerViewHandler>(ViewHandler.ViewMapper)
