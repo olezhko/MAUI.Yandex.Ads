@@ -1,10 +1,11 @@
-﻿using Microsoft.Maui.Handlers;
-using MAUI.Yandex.Ads.iOS.Binding;
+﻿using MAUI.Yandex.Ads.iOS.Binding;
+using Microsoft.Maui.Handlers;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MAUI.Yandex.Ads;
 
 public partial class AdBannerViewHandler
-    : ViewHandler<AdBannerView, YMANativeBannerView>
+    : ViewHandler<AdBannerView, YMAAdView>
 {
     public static IPropertyMapper<AdBannerView, AdBannerViewHandler> Mapper =
         new PropertyMapper<AdBannerView, AdBannerViewHandler>(ViewHandler.ViewMapper)
@@ -15,14 +16,14 @@ public partial class AdBannerViewHandler
     public AdBannerViewHandler() : base(Mapper) { }
 
     // ── Create native view ────────────────────────────────────────────────
-    protected override YMABannerAdView CreatePlatformView()
+    protected override YMAAdView CreatePlatformView()
     {
-        var banner = new YMABannerAdView();
+        var banner = new YMAAdView(VirtualView.AdUnitId, YMABannerAdSize.StickySizeWithContainerWidth((uint)VirtualView.AdWidth));
         banner.Delegate = new BannerDelegate(VirtualView);
         return banner;
     }
 
-    protected override void ConnectHandler(YMABannerAdView platformView)
+    protected override void ConnectHandler(YMAAdView platformView)
     {
         base.ConnectHandler(platformView);
         LoadAd(platformView);
@@ -35,26 +36,26 @@ public partial class AdBannerViewHandler
         handler.LoadAd(handler.PlatformView);
     }
 
-    private void LoadAd(YMABannerAdView banner)
+    private void LoadAd(YMAAdView banner)
     {
         if (string.IsNullOrEmpty(VirtualView.AdUnitId)) return;
 
-        banner.AdUnitID = VirtualView.AdUnitId;
-        banner.AdSize = YMABannerAdSize.StickySize((uint)VirtualView.AdWidth);
-        banner.LoadAd(new YMAMutableAdRequest());
+        banner.LoadAd();
     }
 
     // ── Delegate ──────────────────────────────────────────────────────────
-    private sealed class BannerDelegate : YMABannerAdViewDelegate
+    private sealed class BannerDelegate : YMAAdViewDelegate
     {
         private readonly AdBannerView _view;
         public BannerDelegate(AdBannerView view) => _view = view;
 
-        public override void BannerAdViewDidLoad(YMABannerAdView banner)
+        public override void AdViewDidLoad(YMAAdView banner)
             => _view.RaiseAdLoaded();
 
-        public override void BannerAdView(YMABannerAdView banner,
-            YMAAdRequestError error)
-            => _view.RaiseAdFailedToLoad(error.Error.LocalizedDescription);
+        public override void AdView(YMAAdView adView, YMAImpressionData? impressionData)
+        {
+            base.AdView(adView, impressionData);
+            _view.RaiseAdFailedToLoad(impressionData.Description);
+        }
     }
 }
