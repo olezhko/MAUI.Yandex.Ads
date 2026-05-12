@@ -2144,9 +2144,9 @@ namespace MAUI.Yandex.Ads.iOS.Binding
         NativeHandle Constructor(CGRect frame);
 
         // -(instancetype _Nullable)initWithCoder:(NSCoder * _Nonnull)coder __attribute__((objc_designated_initializer));
-        [Export("initWithCoder:")]
-        [DesignatedInitializer]
-        NativeHandle Constructor(NSCoder coder);
+        //[Export("initWithCoder:")]
+        //[DesignatedInitializer]
+        //NativeHandle Constructor(NSCoder coder);
 
         // -(void)encodeWithCoder:(NSCoder * _Nonnull)coder;
         [Export("encodeWithCoder:")]
@@ -2317,9 +2317,9 @@ namespace MAUI.Yandex.Ads.iOS.Binding
         NativeHandle Constructor(CGRect frame);
 
         // -(instancetype _Nullable)initWithCoder:(NSCoder * _Nonnull)coder __attribute__((objc_designated_initializer));
-        [Export("initWithCoder:")]
-        [DesignatedInitializer]
-        NativeHandle Constructor(NSCoder coder);
+        //[Export("initWithCoder:")]
+        //[DesignatedInitializer]
+        //NativeHandle Constructor(NSCoder coder);
 
         //// -(void)observeValueForKeyPath:(NSString * _Nullable)keyPath ofObject:(id _Nullable)object change:(NSDictionary<NSKeyValueChangeKey,id> * _Nullable)change context:(void * _Nullable)context;
         //[Export("observeValueForKeyPath:ofObject:change:context:")]
@@ -2455,7 +2455,8 @@ namespace MAUI.Yandex.Ads.iOS.Binding
   protocol, then [Model] is redundant and will generate code that will never
   be used.
 */
-    [Protocol]
+    [Protocol, Model]
+    [BaseType(typeof(NSObject))]
     interface YMASliderAd
     {
         [Wrap("WeakDelegate"), Abstract]
