@@ -1,6 +1,6 @@
-﻿using MAUI.Yandex.Ads.iOS.Binding;
+﻿using Foundation;
+using MAUI.Yandex.Ads.iOS.Binding;
 using Microsoft.Maui.Handlers;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MAUI.Yandex.Ads;
 
@@ -49,13 +49,10 @@ public partial class AdBannerViewHandler
         private readonly AdBannerView _view;
         public BannerDelegate(AdBannerView view) => _view = view;
 
-        public override void AdViewDidLoad(YMAAdView banner)
+        public override void AdViewDidLoad(YMAAdView adView)
             => _view.RaiseAdLoaded();
 
-        public override void AdView(YMAAdView adView, YMAImpressionData? impressionData)
-        {
-            base.AdView(adView, impressionData);
-            _view.RaiseAdFailedToLoad(impressionData.Description);
-        }
+        public override void AdViewDidFailLoading(YMAAdView adView, NSError error)
+            => _view.RaiseAdFailedToLoad(error.LocalizedDescription);
     }
 }
