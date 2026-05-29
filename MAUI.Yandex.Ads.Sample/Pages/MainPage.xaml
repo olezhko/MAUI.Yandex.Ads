@@ -42,7 +42,7 @@
             SemanticProperties.Description="Add task" />
         
         <yandexAds:AdBannerView
-        AdUnitId="demo-banner-yandex"
+        AdUnitId="R-M-19140808-4"
         AdWidth="320"
         HeightRequest="50"
         HorizontalOptions="Center" />

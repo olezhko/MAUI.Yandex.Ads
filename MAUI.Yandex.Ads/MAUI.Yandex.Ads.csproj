@@ -16,6 +16,8 @@
 		       <MauiXaml Update="MyPage.xaml" Inflator="Runtime" /> (force runtime inflation) -->
 		<MauiXamlInflator>SourceGen</MauiXamlInflator>
 
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">23.0</SupportedOSPlatformVersion>
@@ -23,6 +25,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+		<None Include="..\README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
   <!-- Yandex Android SDK via Maven -->
@@ -50,7 +53,7 @@
     <AndroidMavenLibrary Include="com.yandex.varioqub:proto" Version="0.6.0" Bind="false" />
 
     <AndroidMavenLibrary Include="com.caverock:androidsvg-aar" Version="1.4" Bind="false" />
-    
+
     <AndroidMavenLibrary Include="io.appmetrica.analytics:analytics" Version="7.14.3" Bind="false" />
     <AndroidMavenLibrary Include="io.appmetrica.analytics:analytics-ad-revenue" Version="7.14.3" Bind="false" />
     <AndroidMavenLibrary Include="io.appmetrica.analytics:analytics-appsetid" Version="7.14.3" Bind="false" />
@@ -83,6 +86,62 @@
 
     <AndroidMavenLibrary Include="io.appmetrica.analytics:analytics-gpllibrary" Version="7.14.3" Bind="false" />
     <AndroidMavenLibrary Include="io.appmetrica.analytics:analytics-common-logger" Version="7.14.3" Bind="false" />
+    
+    <!--<AndroidIgnoredJavaDependency Include="com.yandex.div:div:32.18.1" />
+    <AndroidIgnoredJavaDependency Include="com.yandex.div:assertion:32.18.1" />
+    <AndroidIgnoredJavaDependency Include="com.yandex.div:beacon:32.18.1" />
+    <AndroidIgnoredJavaDependency Include="com.yandex.div:div-core:32.18.1" />
+    <AndroidIgnoredJavaDependency Include="com.yandex.div:div-data:32.18.1" />
+    <AndroidIgnoredJavaDependency Include="com.yandex.div:div-evaluable:32.18.1" />
+    <AndroidIgnoredJavaDependency Include="com.yandex.div:div-histogram:32.18.1" />
+    <AndroidIgnoredJavaDependency Include="com.yandex.div:div-json:32.18.1" />
+    <AndroidIgnoredJavaDependency Include="com.yandex.div:div-states:32.18.1" />
+    <AndroidIgnoredJavaDependency Include="com.yandex.div:div-storage:32.18.1" />
+    <AndroidIgnoredJavaDependency Include="com.yandex.div:div-svg:32.18.1" />
+    <AndroidIgnoredJavaDependency Include="com.yandex.div:logging:32.18.1" />
+    <AndroidIgnoredJavaDependency Include="com.yandex.div:utils:32.18.1" />
+    <AndroidIgnoredJavaDependency Include="com.yandex.yatagan:api-compiled:1.5.0" />
+    <AndroidIgnoredJavaDependency Include="com.yandex.yatagan:api-public:1.5.0" />
+    <AndroidIgnoredJavaDependency Include="com.yandex.yatagan:api-common:1.5.0" />
+
+    <AndroidIgnoredJavaDependency Include="com.yandex.varioqub:appmetrica-adapter:0.6.0" />
+    <AndroidIgnoredJavaDependency Include="com.yandex.varioqub:analytic-adapter:0.6.0" />
+    <AndroidIgnoredJavaDependency Include="com.yandex.varioqub:proto:0.6.0" />
+
+    <AndroidIgnoredJavaDependency Include="com.caverock:androidsvg-aar:1.4" />
+
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-ad-revenue:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-appsetid:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-billing:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-core-api:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-core-utils:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-id-sync:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-identifiers:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-location-api:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-location:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-logger:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-modules-api:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-ndkcrashes-api:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-network:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-network-tasks:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-proto:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-remote-permissions:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-reporter-extension:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-screenshot:7.14.3" />
+
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-ad-revenue-admob-v23:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-ad-revenue-applovin-v12:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-ad-revenue-fyber-v3:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-ad-revenue-ironsource-v7:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-ad-revenue-ironsource-v9:7.14.3" />
+
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-billing-interface:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-billing-v6:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-billing-v8:7.14.3" />
+
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-gpllibrary:7.14.3" />
+    <AndroidIgnoredJavaDependency Include="io.appmetrica.analytics:analytics-common-logger:7.14.3" />-->
     <TransformFile Include="Transforms\Metadata.xml" />
   </ItemGroup>
   
