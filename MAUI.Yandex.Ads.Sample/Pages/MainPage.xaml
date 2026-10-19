@@ -41,10 +41,12 @@
             ToolTipProperties.Text="Add task"
             SemanticProperties.Description="Add task" />
         
-        <yandexAds:AdBannerView
-        AdUnitId="R-M-19140808-4"
+        <yandexAds:AdBannerView 
+        AdUnitId="demo-banner-yandex"
         AdWidth="320"
         HeightRequest="50"
-        HorizontalOptions="Center" />
+        HorizontalOptions="Center"
+        AdLoaded="OnAdLoaded"
+        AdFailedToLoad="OnAdFailedToLoad" />
     </Grid>
 </ContentPage>
