@@ -12,7 +12,7 @@ A .NET MAUI library that wraps the [Yandex Mobile Ads SDK](https://yandex.ru/dev
 ## Installation
 
 ```
-dotnet add package MAUI.Yandex.Ads
+dotnet add package LATec.MAUI.Yandex.Ads
 ```
 
 ## Setup

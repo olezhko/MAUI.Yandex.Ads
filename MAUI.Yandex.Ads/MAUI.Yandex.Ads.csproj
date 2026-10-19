@@ -16,7 +16,7 @@
 		       <MauiXaml Update="MyPage.xaml" Inflator="Runtime" /> (force runtime inflation) -->
 		<MauiXamlInflator>SourceGen</MauiXamlInflator>
 
-		<PackageId>MAUI.Yandex.Ads</PackageId>
+		<PackageId>LATec.MAUI.Yandex.Ads</PackageId>
 		<Version>1.0.0-beta</Version>
 		<Authors>Aleh Ladyka</Authors>
 		<Description>Yandex Mobile Ads banner control (AdBannerView) for .NET MAUI on Android and iOS.</Description>
