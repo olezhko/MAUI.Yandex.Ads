@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using MAUI.Yandex.Ads.Platforms.iOS;
 
 namespace MAUI.Yandex.Ads;
 
@@ -14,7 +13,7 @@ public static class YandexAdsMauiExtensions
 #if ANDROID
             handlers.AddHandler<AdBannerView, AdBannerViewHandler>();
 #elif IOS
-            handlers.AddHandler<AdBannerView, AdBannerViewHandler>();
+            handlers.AddHandler<AdBannerView, MAUI.Yandex.Ads.Platforms.iOS.AdBannerViewHandler>();
 #endif
         });
 

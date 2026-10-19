@@ -41,7 +41,7 @@
             ToolTipProperties.Text="Add task"
             SemanticProperties.Description="Add task" />
         
-        <yandexAds:AdBannerView 
+        <yandexAds:AdBannerView VerticalOptions="Start"
         AdUnitId="demo-banner-yandex"
         AdWidth="320"
         HeightRequest="50"
