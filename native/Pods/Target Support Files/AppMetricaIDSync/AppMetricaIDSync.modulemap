@@ -1,0 +1,6 @@
+module AppMetricaIDSync {
+  umbrella header "AppMetricaIDSync-umbrella.h"
+
+  export *
+  module * { export * }
+}

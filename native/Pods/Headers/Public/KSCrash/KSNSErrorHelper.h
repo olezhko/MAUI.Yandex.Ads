@@ -1,0 +1,1 @@
+../../../KSCrash/Sources/KSCrashCore/include/KSNSErrorHelper.h

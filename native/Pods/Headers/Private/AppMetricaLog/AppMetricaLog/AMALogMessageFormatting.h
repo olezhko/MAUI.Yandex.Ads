@@ -1,0 +1,1 @@
+../../../../AppMetricaLog/AppMetricaLog/Sources/AMALogMessageFormatting.h

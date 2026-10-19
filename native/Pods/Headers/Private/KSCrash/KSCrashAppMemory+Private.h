@@ -1,0 +1,1 @@
+../../../KSCrash/Sources/KSCrashRecording/KSCrashAppMemory+Private.h

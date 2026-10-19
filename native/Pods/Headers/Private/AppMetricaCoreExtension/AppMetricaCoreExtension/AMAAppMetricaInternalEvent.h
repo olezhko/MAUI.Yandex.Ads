@@ -1,0 +1,1 @@
+../../../../AppMetricaCoreExtension/AppMetricaCoreExtension/Sources/include/AppMetricaCoreExtension/AMAAppMetricaInternalEvent.h

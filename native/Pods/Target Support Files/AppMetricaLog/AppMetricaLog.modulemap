@@ -1,0 +1,6 @@
+module AppMetricaLog {
+  umbrella header "AppMetricaLog-umbrella.h"
+
+  export *
+  module * { export * }
+}

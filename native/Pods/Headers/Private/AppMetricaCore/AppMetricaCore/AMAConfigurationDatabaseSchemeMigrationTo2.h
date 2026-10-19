@@ -1,0 +1,1 @@
+../../../../AppMetricaCore/AppMetricaCore/Sources/Database/Migration/Scheme/AMAConfigurationDatabaseSchemeMigrationTo2.h

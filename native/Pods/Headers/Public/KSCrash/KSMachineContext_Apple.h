@@ -1,0 +1,1 @@
+../../../KSCrash/Sources/KSCrashRecordingCore/include/KSMachineContext_Apple.h

@@ -1,0 +1,1 @@
+../../../KSCrash/Sources/KSCrashRecordingCore/include/KSCrashExceptionHandlingPlan.h

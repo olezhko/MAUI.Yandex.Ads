@@ -1,0 +1,1 @@
+../../../../AppMetricaCore/AppMetricaCore/Sources/Resolver/AMAResolver.h

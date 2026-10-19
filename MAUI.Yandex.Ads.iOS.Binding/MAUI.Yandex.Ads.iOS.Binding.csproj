@@ -1,26 +1,37 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFramework>net10.0-ios</TargetFramework>
+    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+    <IsBindingProject>true</IsBindingProject>
     <Nullable>enable</Nullable>
     <ImplicitUsings>true</ImplicitUsings>
-    <IsBindingProject>true</IsBindingProject>
-
-    <!--
-      Enable trim analyzers for class libraries.
-      To learn more, see: https://learn.microsoft.com/dotnet/core/deploying/trimming/prepare-libraries-for-trimming
-    -->
-    <IsTrimmable>true</IsTrimmable>
+    <RootNamespace>YandexAdsBridge</RootNamespace>
+    <!-- Builds the xcframework automatically if it's missing (needs Xcode, CocoaPods). -->
+    <YabNativeDir>$(MSBuildThisFileDirectory)../native/</YabNativeDir>
+    <YabXcframework>$(YabNativeDir)build/YandexAdsBridge.xcframework</YabXcframework>
   </PropertyGroup>
 
   <ItemGroup>
     <ObjcBindingApiDefinition Include="ApiDefinition.cs" />
-    <ObjcBindingCoreSource Include="StructsAndEnums.cs" />
   </ItemGroup>
 
+  <!--
+    The wrapper is a DYNAMIC framework with YandexMobileAds, AppMetrica and DivKit
+    statically linked inside, so it is the only native reference needed.
+    The framework is embedded into the app's Frameworks/ folder automatically.
+  -->
   <ItemGroup>
-    <NativeReference Include="YandexMobileAds.xcframework">
+    <NativeReference Include="$(YabXcframework)">
       <Kind>Framework</Kind>
-      <Frameworks></Frameworks>
+      <SmartLink>False</SmartLink>
+      <ForceLoad>False</ForceLoad>
     </NativeReference>
   </ItemGroup>
+
+  <Target Name="YabBuildNativeIfMissing" BeforeTargets="BeforeBuild" Condition="!Exists('$(YabXcframework)') And $([MSBuild]::IsOSPlatform('OSX'))">
+    <Message Importance="high" Text="YandexAdsBridge.xcframework not found - running native/build.sh" />
+    <Exec Command="bash &quot;$(YabNativeDir)build.sh&quot;" />
+  </Target>
+
 </Project>

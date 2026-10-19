@@ -1,0 +1,1 @@
+../../../../AppMetricaCore/AppMetricaCoreExtension/Sources/include/AppMetricaCoreExtension/AMAModuleEntryPoint.h

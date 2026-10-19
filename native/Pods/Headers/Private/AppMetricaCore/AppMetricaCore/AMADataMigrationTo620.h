@@ -1,0 +1,1 @@
+../../../../AppMetricaCore/AppMetricaCore/Sources/Database/Migration/Scheme/AMADataMigrationTo620.h

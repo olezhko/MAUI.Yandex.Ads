@@ -1,0 +1,1 @@
+../../../KSCrash/Sources/KSCrashRecording/include/KSCrashAppMemoryTracker.h

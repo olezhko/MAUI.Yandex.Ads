@@ -1,0 +1,6 @@
+module AppMetricaIdentifiers {
+  umbrella header "AppMetricaIdentifiers-umbrella.h"
+
+  export *
+  module * { export * }
+}

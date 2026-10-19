@@ -1,0 +1,1 @@
+../../../../AppMetricaCore/AppMetricaCore/Sources/StartupPermissions/AMAStartupPermissionSerializer.h

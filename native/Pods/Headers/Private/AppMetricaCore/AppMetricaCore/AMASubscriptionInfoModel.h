@@ -1,0 +1,1 @@
+../../../../AppMetricaCore/AppMetricaCore/Sources/Revenue/AutoIAP/Models/AMASubscriptionInfoModel.h

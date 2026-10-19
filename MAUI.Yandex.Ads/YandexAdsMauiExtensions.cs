@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using MAUI.Yandex.Ads.Platforms.iOS;
 
 namespace MAUI.Yandex.Ads;
 

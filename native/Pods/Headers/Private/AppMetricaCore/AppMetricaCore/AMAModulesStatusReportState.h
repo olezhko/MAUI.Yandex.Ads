@@ -1,0 +1,1 @@
+../../../../AppMetricaCore/AppMetricaCore/Sources/ModulesAPI/Reporter/AMAModulesStatusReportState.h

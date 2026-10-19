@@ -1,0 +1,1 @@
+../../../KSCrash/Sources/KSCrashRecording/Monitors/KSCrashMonitor_Signal.h

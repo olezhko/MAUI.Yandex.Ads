@@ -1,0 +1,1 @@
+../../../../AppMetricaCore/AppMetricaCore/Sources/LibraryAdapter/AMAAppMetricaLibraryAdapterConfiguration+Internal.h

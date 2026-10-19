@@ -1,0 +1,6 @@
+module AppMetricaCoreExtension {
+  umbrella header "AppMetricaCoreExtension-umbrella.h"
+
+  export *
+  module * { export * }
+}

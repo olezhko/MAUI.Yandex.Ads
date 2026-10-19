@@ -1,0 +1,4 @@
+framework module YandexMobileAds {
+  header "YandexMobileAds-Swift.h"
+  requires objc
+}

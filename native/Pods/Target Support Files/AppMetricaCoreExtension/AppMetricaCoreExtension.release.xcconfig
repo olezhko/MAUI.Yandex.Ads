@@ -1,0 +1,16 @@
+CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO
+CONFIGURATION_BUILD_DIR = ${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaCoreExtension
+DEFINES_MODULE = YES
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited) COCOAPODS=1
+HEADER_SEARCH_PATHS = $(inherited) "${PODS_ROOT}/Headers/Private" "${PODS_ROOT}/Headers/Private/AppMetricaCoreExtension" "${PODS_ROOT}/Headers/Public" "${PODS_ROOT}/Headers/Public/AppMetricaCore" "${PODS_ROOT}/Headers/Public/AppMetricaCoreExtension" "${PODS_ROOT}/Headers/Public/AppMetricaCoreUtils" "${PODS_ROOT}/Headers/Public/AppMetricaEncodingUtils" "${PODS_ROOT}/Headers/Public/AppMetricaFMDB" "${PODS_ROOT}/Headers/Public/AppMetricaHostState" "${PODS_ROOT}/Headers/Public/AppMetricaKeychain" "${PODS_ROOT}/Headers/Public/AppMetricaLog" "${PODS_ROOT}/Headers/Public/AppMetricaNetwork" "${PODS_ROOT}/Headers/Public/AppMetricaPlatform" "${PODS_ROOT}/Headers/Public/AppMetricaProtobuf" "${PODS_ROOT}/Headers/Public/AppMetricaProtobufUtils" "${PODS_ROOT}/Headers/Public/AppMetricaStorageUtils"
+OTHER_CFLAGS = $(inherited) -fmodule-map-file="${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaIdentifiers/AppMetricaIdentifiers.modulemap" -fmodule-map-file="${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaLogSwift/AppMetricaLogSwift.modulemap" -fmodule-map-file="${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaSynchronization/AppMetricaSynchronization.modulemap" -fmodule-map-file="${PODS_ROOT}/Headers/Public/AppMetricaCore/AppMetricaCore.modulemap" -fmodule-map-file="${PODS_ROOT}/Headers/Public/AppMetricaCoreUtils/AppMetricaCoreUtils.modulemap" -fmodule-map-file="${PODS_ROOT}/Headers/Public/AppMetricaEncodingUtils/AppMetricaEncodingUtils.modulemap" -fmodule-map-file="${PODS_ROOT}/Headers/Public/AppMetricaFMDB/AppMetricaFMDB.modulemap" -fmodule-map-file="${PODS_ROOT}/Headers/Public/AppMetricaHostState/AppMetricaHostState.modulemap" -fmodule-map-file="${PODS_ROOT}/Headers/Public/AppMetricaKeychain/AppMetricaKeychain.modulemap" -fmodule-map-file="${PODS_ROOT}/Headers/Public/AppMetricaLog/AppMetricaLog.modulemap" -fmodule-map-file="${PODS_ROOT}/Headers/Public/AppMetricaNetwork/AppMetricaNetwork.modulemap" -fmodule-map-file="${PODS_ROOT}/Headers/Public/AppMetricaPlatform/AppMetricaPlatform.modulemap" -fmodule-map-file="${PODS_ROOT}/Headers/Public/AppMetricaProtobuf/AppMetricaProtobuf.modulemap" -fmodule-map-file="${PODS_ROOT}/Headers/Public/AppMetricaProtobufUtils/AppMetricaProtobufUtils.modulemap" -fmodule-map-file="${PODS_ROOT}/Headers/Public/AppMetricaStorageUtils/AppMetricaStorageUtils.modulemap"
+PODS_BUILD_DIR = ${BUILD_DIR}
+PODS_CONFIGURATION_BUILD_DIR = ${PODS_BUILD_DIR}/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)
+PODS_DEVELOPMENT_LANGUAGE = ${DEVELOPMENT_LANGUAGE}
+PODS_ROOT = ${SRCROOT}
+PODS_TARGET_SRCROOT = ${PODS_ROOT}/AppMetricaCoreExtension
+PODS_XCFRAMEWORKS_BUILD_DIR = $(PODS_CONFIGURATION_BUILD_DIR)/XCFrameworkIntermediates
+PRODUCT_BUNDLE_IDENTIFIER = org.cocoapods.${PRODUCT_NAME:rfc1034identifier}
+SKIP_INSTALL = YES
+SWIFT_INCLUDE_PATHS = $(inherited) "${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaIdentifiers" "${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaLogSwift" "${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaSynchronization"
+USE_RECURSIVE_SCRIPT_INPUTS_IN_SCRIPT_PHASES = YES

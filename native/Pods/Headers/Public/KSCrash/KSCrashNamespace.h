@@ -1,0 +1,1 @@
+../../../KSCrash/Sources/KSCrashCore/include/KSCrashNamespace.h

@@ -1,0 +1,26 @@
+${PODS_ROOT}/Target Support Files/Pods-YandexAdsBridge/Pods-YandexAdsBridge-resources.sh
+${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaAdSupport/AppMetricaAdSupport.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaCore/AppMetricaCore.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaCoreExtension/AppMetricaCoreExtension.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaCoreUtils/AppMetricaCoreUtils.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaCrashes/AppMetricaCrashes.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaEncodingUtils/AppMetricaEncodingUtils.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaFMDB/AppMetricaFMDB.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaHostState/AppMetricaHostState.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaIDSync/AppMetricaIDSync.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaIdentifiers/AppMetricaIdentifiers.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaKeychain/AppMetricaKeychain.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaLibraryAdapter/AppMetricaLibraryAdapter.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaLog/AppMetricaLog.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaLogSwift/AppMetricaLogSwift.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaNetwork/AppMetricaNetwork.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaPlatform/AppMetricaPlatform.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaProtobuf/AppMetricaProtobuf.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaProtobufUtils/AppMetricaProtobufUtils.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaStorageUtils/AppMetricaStorageUtils.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/AppMetricaSynchronization/AppMetricaSynchronization.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/KSCrash/KSCrashCore.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/KSCrash/KSCrashRecording.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/KSCrash/KSCrashRecordingCore.bundle
+${PODS_ROOT}/YandexMobileAds/YandexMobileAds.xcframework/MobileAdsBundle.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/YandexMobileAds/YandexMobileAds_PrivacyInfo.bundle

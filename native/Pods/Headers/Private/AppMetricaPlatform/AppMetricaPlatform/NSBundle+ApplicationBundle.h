@@ -1,0 +1,1 @@
+../../../../AppMetricaPlatform/AppMetricaPlatform/Sources/include/AppMetricaPlatform/NSBundle+ApplicationBundle.h

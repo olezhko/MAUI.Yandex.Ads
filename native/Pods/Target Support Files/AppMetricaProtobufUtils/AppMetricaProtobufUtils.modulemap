@@ -1,0 +1,6 @@
+module AppMetricaProtobufUtils {
+  umbrella header "AppMetricaProtobufUtils-umbrella.h"
+
+  export *
+  module * { export * }
+}

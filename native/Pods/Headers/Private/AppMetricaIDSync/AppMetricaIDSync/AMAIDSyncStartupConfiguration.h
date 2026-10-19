@@ -1,0 +1,1 @@
+../../../../AppMetricaIDSync/AppMetricaIDSync/Sources/Startup/AMAIDSyncStartupConfiguration.h

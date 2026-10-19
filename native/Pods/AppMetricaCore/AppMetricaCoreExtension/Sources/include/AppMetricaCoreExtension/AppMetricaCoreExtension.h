@@ -1,0 +1,41 @@
+#if __has_include("AppMetricaCoreExtension.h")
+    #import "AMAAdProviding.h"
+    #import "AMAAppMetricaEventData.h"
+    #import "AMAAppMetricaExtended.h"
+    #import "AMAAppMetricaExtendedReporting.h"
+    #import "AMAAppMetricaLibraryAdapterConfiguration.h"
+    #import "AMAApplicationStateManager.h"
+    #import "AMAEnvironmentContainer.h"
+    #import "AMAEventFlushableDelegate.h"
+    #import "AMAEventPollingDelegate.h"
+    #import "AMAExtendedStartupObserving.h"
+    #import "AMAModuleActivationConfiguration.h"
+    #import "AMAModuleActivationDelegate.h"
+    #import "AMAModulePreActivationHandler.h"
+    #import "AMAModuleRegistrar.h"
+    #import "AMAModuleEntryPoint.h"
+    #import "AMAReporterStorageControlling.h"
+    #import "AMAServiceConfiguration.h"
+    #import "AMAStaticEventData.h"
+    #import "AMAAppMetricaInternalEvent.h"
+#else
+    #import <AppMetricaCoreExtension/AMAAdProviding.h>
+    #import <AppMetricaCoreExtension/AMAAppMetricaEventData.h>
+    #import <AppMetricaCoreExtension/AMAAppMetricaExtended.h>
+    #import <AppMetricaCoreExtension/AMAAppMetricaExtendedReporting.h>
+    #import <AppMetricaCoreExtension/AMAAppMetricaLibraryAdapterConfiguration.h>
+    #import <AppMetricaCoreExtension/AMAApplicationStateManager.h>
+    #import <AppMetricaCoreExtension/AMAEnvironmentContainer.h>
+    #import <AppMetricaCoreExtension/AMAEventFlushableDelegate.h>
+    #import <AppMetricaCoreExtension/AMAEventPollingDelegate.h>
+    #import <AppMetricaCoreExtension/AMAExtendedStartupObserving.h>
+    #import <AppMetricaCoreExtension/AMAModuleActivationConfiguration.h>
+    #import <AppMetricaCoreExtension/AMAModuleActivationDelegate.h>
+    #import <AppMetricaCoreExtension/AMAModulePreActivationHandler.h>
+    #import <AppMetricaCoreExtension/AMAModuleRegistrar.h>
+    #import <AppMetricaCoreExtension/AMAModuleEntryPoint.h>
+    #import <AppMetricaCoreExtension/AMAReporterStorageControlling.h>
+    #import <AppMetricaCoreExtension/AMAServiceConfiguration.h>
+    #import <AppMetricaCoreExtension/AMAStaticEventData.h>
+    #import <AppMetricaCoreExtension/AMAAppMetricaInternalEvent.h>
+#endif

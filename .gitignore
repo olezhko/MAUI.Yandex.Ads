@@ -361,3 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+.DS_Store
+MAUI.Yandex.Ads.iOS.Binding/.DS_Store
+MAUI.Yandex.Ads.iOS.Binding/YandexMobileAds.xcframework/.DS_Store
+MAUI.Yandex.Ads.iOS.Binding/YandexMobileAds.xcframework/ios-arm64/.DS_Store

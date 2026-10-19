@@ -1,0 +1,6 @@
+module AppMetricaKeychain {
+  umbrella header "AppMetricaKeychain-umbrella.h"
+
+  export *
+  module * { export * }
+}

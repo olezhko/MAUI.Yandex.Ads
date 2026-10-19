@@ -1,0 +1,1 @@
+../../../Target Support Files/AppMetricaLibraryAdapter/AppMetricaLibraryAdapter-umbrella.h

@@ -1,0 +1,1 @@
+../../../../AppMetricaIDSync/AppMetricaIDSync/Sources/IDSync/AMAIDSyncManager.h

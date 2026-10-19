@@ -1,0 +1,1 @@
+../../../../AppMetricaCrashes/AppMetricaCrashes/Sources/CrashModels/Crash/Thread/AMABacktrace.h

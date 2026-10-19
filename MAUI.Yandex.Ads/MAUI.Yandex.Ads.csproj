@@ -230,4 +230,9 @@
     <ProjectReference Include="..\MAUI.Yandex.Ads.iOS.Binding\MAUI.Yandex.Ads.iOS.Binding.csproj" />
   </ItemGroup>
 
+  <Target Name="UpdateYandexSkadIds" BeforeTargets="BeforeBuild"
+          Condition="$(TargetFramework.Contains('-ios')) And $([MSBuild]::IsOSPlatform('OSX'))">
+    <Exec Command="bash &quot;$(MSBuildProjectDirectory)/update_skad_ids.sh&quot; &quot;$(MSBuildProjectDirectory)/Platforms/iOS/Info.plist&quot;" ContinueOnError="true" />
+  </Target>
+  
 </Project>

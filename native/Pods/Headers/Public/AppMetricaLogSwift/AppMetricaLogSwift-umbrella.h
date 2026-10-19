@@ -1,0 +1,1 @@
+../../../Target Support Files/AppMetricaLogSwift/AppMetricaLogSwift-umbrella.h

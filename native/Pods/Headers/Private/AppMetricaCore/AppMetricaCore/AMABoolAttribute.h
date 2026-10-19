@@ -1,0 +1,1 @@
+../../../../AppMetricaCore/AppMetricaCore/Sources/Profiles/Attributes/AMABoolAttribute.h

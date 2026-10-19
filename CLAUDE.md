@@ -4,52 +4,45 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a .NET MAUI library (`MAUI.Yandex.Ads`) that wraps the Yandex Mobile Ads SDK to expose banner ad functionality to .NET MAUI apps. It targets `net10.0-android`, `net10.0-ios`, and `net10.0-maccatalyst` (iOS/Mac only on non-Linux build hosts).
+`MAUI.Yandex.Ads` is a .NET MAUI library that wraps the Yandex Mobile Ads SDK and exposes a banner ad control (`AdBannerView`) to MAUI apps. It targets `net10.0-android` and `net10.0-ios` only (min Android API 23, iOS 15.0).
+
+The solution (`MAUI.Yandex.Ads.slnx`) has three projects:
+
+- **`MAUI.Yandex.Ads/`**: the library itself (cross-platform control plus per-platform handlers).
+- **`MAUI.Yandex.Ads.iOS.Binding/`**: an Objective-C binding project for `YandexMobileAds.xcframework`, which is committed in that directory. The library references it only for `-ios` targets.
+- **`MAUI.Yandex.Ads.Sample/`**: a MAUI sample app (based on the standard MAUI template) that references the library. It uses `<yandexAds:AdBannerView>` in `Pages/MainPage.xaml` and is the place to manually test changes.
 
 ## Build Commands
 
 ```bash
-# Build all supported platforms
-dotnet build MAUI10.Yandex.Ads/MAUI.Yandex.Ads.csproj
+# Library, both platforms
+dotnet build MAUI.Yandex.Ads/MAUI.Yandex.Ads.csproj
 
-# Build Android only (works on any OS)
-dotnet build MAUI10.Yandex.Ads/MAUI.Yandex.Ads.csproj -f net10.0-android
+# Single platform
+dotnet build MAUI.Yandex.Ads/MAUI.Yandex.Ads.csproj -f net10.0-android
+dotnet build MAUI.Yandex.Ads/MAUI.Yandex.Ads.csproj -f net10.0-ios   # macOS + Xcode required
 
-# Build iOS (requires macOS + Xcode)
-dotnet build MAUI10.Yandex.Ads/MAUI.Yandex.Ads.csproj -f net10.0-ios
+# Run the sample app
+dotnet build MAUI.Yandex.Ads.Sample/MAUI.Yandex.Ads.Sample.csproj -f net10.0-android -t:Run
 ```
 
-There are no test projects in this repository.
+There are no test projects.
 
 ## Architecture
 
-### MAUI Handler Pattern
+### Handler pattern
 
-The library uses the standard MAUI handler architecture:
+- `AdBannerView.cs` is the cross-platform `View`. It has the bindable properties `AdUnitId` and `AdWidth` and the events `AdLoaded` and `AdFailedToLoad`. Handlers fire the events through the `internal` methods `RaiseAdLoaded` and `RaiseAdFailedToLoad`.
+- `Platforms/Android/AdBannerViewHandler.cs` and `Platforms/iOS/AdBannerViewHandler.cs` are `partial class AdBannerViewHandler` implementations in the `MAUI.Yandex.Ads` namespace. There is no shared or stub handler. A target without a platform folder has no handler.
+- `YandexAdsMauiExtensions.UseYandexAds()` registers the handler under `#if ANDROID` / `#elif IOS`. A new platform has to be added here as well.
+- Only `AdUnitId` is in the property mappers. `AdWidth` is read only when the ad is created or loaded (Android: `BannerAdSize.StickySize`; iOS: `YMABannerAdSize.StickySizeWithContainerWidth` in `CreatePlatformView`), so changing it later has no effect.
 
-- **`AdBannerView.cs`** — the cross-platform `View` subclass with bindable properties (`AdUnitId`, `AdWidth`) and events (`AdLoaded`, `AdFailedToLoad`). This is what consumers reference in XAML/C#.
-- **`Platforms/Android/AdBannerViewHandler.cs`** — platform implementation using `BannerAdView` from the Yandex Android SDK. Compiled only for `-android` target.
-- **`Platforms/iOS/AdBannerViewHandler.cs`** — platform implementation using `YMABannerAdView` from the Yandex iOS xcframework. Compiled only for `-ios` and `-maccatalyst` targets.
-- **`AdBannerViewHandler.cs`** (root) — a non-functional stub compiled for unsupported platforms (e.g., Windows, Mac Catalyst without iOS support). It is intentionally left empty so the project builds without errors on those targets.
-- **`YandexAdsMauiExtensions.cs`** — provides the `UseYandexAds(this MauiAppBuilder)` extension method that registers the handler. Consumers call this in `MauiProgram.cs`.
+### Android native SDK
 
-### Native SDK Integration
+- The SDK is fetched from Maven with `<AndroidMavenLibrary Include="com.yandex.android:mobileads" ...>`. Its many transitive Maven dependencies (`com.yandex.div`, `io.appmetrica.analytics`, `yatagan`, `varioqub`, …) are listed explicitly with `Bind="false"`. The ones that have NuGet equivalents (AndroidX, Kotlin, OkHttp, Play Services) come in as `PackageReference`s instead. When you bump the SDK version, update this dependency list together with it. Java dependency verification errors usually mean an entry is missing.
+- `Transforms/Metadata.xml` fixes up the generated bindings. `BannerAdView` and `BannerAdSize` extend obfuscated internal classes that get no C# type, so they are re-parented to `RelativeLayout` and `Object`. A `CallToActionView.getText` override that breaks compilation is removed. A new SDK version may change the obfuscated names and need new transforms.
+- The library does not call `MobileAds.Initialize`. The consuming app does that itself, as `MAUI.Yandex.Ads.Sample/Platforms/Android/MainActivity.cs` shows using `ActionInitializationListener` (a helper exposed by the library).
 
-- **Android**: Pulled automatically at build time via `<AndroidMavenLibrary Include="com.yandex.android:mobileads" Version="7.7.0" />` — no manual download needed.
-- **iOS**: Requires manually placing `YandexMobileAds.xcframework` at `MAUI10.Yandex.Ads/Frameworks/YandexMobileAds.xcframework`. The `.csproj` references it via `<NativeReference>`. This directory does not exist in source control and must be populated before iOS builds will succeed.
+### iOS native SDK
 
-### Adding a New Platform Handler
-
-1. Create `Platforms/{Platform}/AdBannerViewHandler.cs` as a `public partial class AdBannerViewHandler : ViewHandler<AdBannerView, TNativeView>`.
-2. Implement `CreatePlatformView()`, `ConnectHandler()`, and property mappers.
-3. The root-level stub will be excluded automatically by the MAUI build system for that platform.
-
-### Consumer Integration
-
-```csharp
-// MauiProgram.cs
-builder.UseYandexAds();
-
-// XAML
-<yandex:AdBannerView AdUnitId="your-unit-id" AdWidth="320" />
-```
+- `ApiDefinition.cs` and `StructsAndEnums.cs` in the binding project are hand-maintained bindings, originally generated from the xcframework headers. The handler uses `YMAAdView`, `YMAAdViewDelegate` and `YMABannerAdSize` from the `MAUI.Yandex.Ads.iOS.Binding` namespace. When the xcframework is updated, update these definitions to match its headers.

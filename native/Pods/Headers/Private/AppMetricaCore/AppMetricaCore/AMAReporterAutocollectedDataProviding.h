@@ -1,0 +1,1 @@
+../../../../AppMetricaCore/AppMetricaCore/Sources/Model/Reporter/AMAReporterAutocollectedDataProviding.h

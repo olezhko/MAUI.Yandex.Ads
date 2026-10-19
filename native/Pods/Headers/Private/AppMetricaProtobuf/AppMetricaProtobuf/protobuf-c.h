@@ -1,0 +1,1 @@
+../../../../AppMetricaProtobuf/AppMetricaProtobuf/Sources/include/AppMetricaProtobuf/protobuf-c.h

@@ -1,0 +1,80 @@
+
+#import <AppMetricaStorageUtils/AppMetricaStorageUtils.h>
+#import <AppMetricaLog/AMALogFlags.h>
+#import <AppMetricaCoreUtils/AppMetricaCoreUtils.h>
+
+@interface AMADiskFileStorage ()
+
+@property (nonatomic, assign, readonly) AMADiskFileStorageOptions options;
+
+@property (atomic, assign) BOOL fileDirectoryExistenceEnsured;
+@property (atomic, assign) BOOL noBackupAttibuteEnsured;
+
+@end
+
+@implementation AMADiskFileStorage
+
+- (instancetype)initWithPath:(NSString *)path options:(AMADiskFileStorageOptions)options
+{
+    self = [super init];
+    if (self != nil) {
+        _path = [path copy];
+        _options = options;
+    }
+    return self;
+}
+
++ (instancetype)diskFileStorageWithPath:(NSString *)path options:(AMADiskFileStorageOptions)options
+{
+    return [[self alloc] initWithPath:path options:options];
+}
+
+- (BOOL)fileExists
+{
+    return [AMAFileUtility fileExistsAtPath:self.path];
+}
+
+- (NSData *)readDataWithError:(NSError **)error
+{
+    NSData *data = [AMAFileUtility rawContentAtFilePath:self.path error:error];
+    if (data != nil) {
+        [self checkNoBackupFlag];
+    }
+    return data;
+}
+
+- (BOOL)writeData:(NSData *)data error:(NSError **)error
+{
+    if ((self.options & AMADiskFileStorageOptionCreateDirectory) != 0 && self.fileDirectoryExistenceEnsured == NO) {
+        [AMAFileUtility createPathIfNeeded:[self.path stringByDeletingLastPathComponent]];
+        self.fileDirectoryExistenceEnsured = YES;
+    }
+
+    BOOL result = [AMAFileUtility writeData:data filePath:self.path error:error];
+    if (result) {
+        [self checkNoBackupFlag];
+    }
+
+    return result;
+}
+
+- (BOOL)deleteFileWithError:(NSError *__autoreleasing *)error
+{
+    return [AMAFileUtility deleteFileAtPath:self.path error:error];
+}
+
+- (void)checkNoBackupFlag
+{
+    if ((self.options & AMADiskFileStorageOptionNoBackup) != 0 && self.noBackupAttibuteEnsured == NO) {
+        self.noBackupAttibuteEnsured = [AMAFileUtility setSkipBackupAttributesOnPath:self.path];
+    }
+}
+
+#if AMA_ALLOW_DESCRIPTIONS
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"%@ filePath: %@", [super description], self.path];
+}
+#endif
+
+@end

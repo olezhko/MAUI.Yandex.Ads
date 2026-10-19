@@ -1,0 +1,1 @@
+../../../../AppMetricaCore/AppMetricaCore/Sources/Configuration/AnonymousConfiguration/AMADefaultAnonymousConfigProvider.h

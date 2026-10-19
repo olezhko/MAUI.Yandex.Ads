@@ -1,0 +1,698 @@
+#import <AppMetricaStorageUtils/AppMetricaStorageUtils.h>
+#import <AppMetricaCoreExtension/AppMetricaCoreExtension.h>
+#import <AppMetricaCoreUtils/AppMetricaCoreUtils.h>
+#import <AppMetricaHostState/AppMetricaHostState.h>
+#import <AppMetricaPlatform/AppMetricaPlatform.h>
+#import "AMAAppMetricaCrashes.h"
+#import "AMAAppMetricaCrashes+Private.h"
+#import "AMAANRWatchdog.h"
+#import "AMACrashContext.h"
+#import "AMACrashEventType.h"
+#import "AMAKSCrashLoader.h"
+#import "AMACrashLogger.h"
+#import "AMACrashLogging.h"
+#import "AMACrashProcessor.h"
+#import "AMACrashReporter.h"
+#import "AMACrashReportingStateNotifier.h"
+#import "AMACrashSafeTransactor.h"
+#import "AMAAppMetricaCrashesConfiguration.h"
+#import "AMADecodedCrash.h"
+#import "AMADecodedCrashSerializer+CustomEventParameters.h"
+#import "AMADecodedCrashSerializer.h"
+#import "AMAErrorEnvironment.h"
+#import "AMAAppMetricaPluginsImpl.h"
+#import "AMACrashReportersContainer.h"
+#import "AMAAppMetricaCrashReporting.h"
+#import "AMACrashReportCrash.h"
+#import "AMACrashReportError.h"
+#import "AMASignal.h"
+#import "AMABuildUID.h"
+#import "AMATransactionReporter.h"
+#import "AMACrashObserverDispatcher.h"
+#import "AMACrashObserverConfiguration.h"
+#import "AMACrashEvent.h"
+#import "AMAExternalCrashLoader.h"
+#import "AMACrashEventConverter.h"
+#import "AMACrashForwarder.h"
+
+typedef NS_ENUM(NSUInteger, AMAAppMetricaCrashMonitoringState) {
+    AMAAppMetricaCrashMonitoringStateNotInitialized = 0,
+    AMAAppMetricaCrashMonitoringStateInstalling,
+    AMAAppMetricaCrashMonitoringStateInstalled,
+};
+
+@interface AMAAppMetricaCrashes ()
+
+@property (nonatomic, strong) AMACrashProcessor *crashProcessor;
+@property (nonatomic, strong) AMACrashReportingStateNotifier *stateNotifier;
+@property (nonatomic, strong) id<AMAAsyncExecuting, AMASyncExecuting> executor;
+@property (nonatomic, strong) AMAANRWatchdog *ANRDetector;
+
+@property (nonatomic, strong) AMAEnvironmentContainer *appEnvironment;
+@property (nonatomic, strong) AMAErrorEnvironment *errorEnvironment;
+
+@property (nonatomic, strong) AMACrashReportersContainer *reportersContainer;
+
+@property (nonatomic, strong, readonly) id<AMAHostStateProviding> hostStateProvider;
+@property (nonatomic, strong, readonly) AMADecodedCrashSerializer *serializer;
+@property (nonatomic, strong, readwrite) NSString *apiKey;
+
+@property (nonatomic, strong) AMAAppMetricaPluginsImpl *pluginsImpl;
+@property (nonatomic, assign) AMAAppMetricaCrashMonitoringState monitoringState;
+
++ (void)setupCrashLogging;
+
+@end
+
+@implementation AMAAppMetricaCrashes
+
+@synthesize activated = _activated;
+
++ (instancetype)crashes
+{
+    static AMAAppMetricaCrashes *sharedInstance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sharedInstance = [[self alloc] init];
+    });
+    return sharedInstance;
+}
+
+- (instancetype)init
+{
+    AMAExecutor *executor = [[AMAExecutor alloc] initWithIdentifier:self];
+    AMAUserDefaultsStorage *storage = [[AMAUserDefaultsStorage alloc] init];
+    AMAUnhandledCrashDetector *detector = [[AMAUnhandledCrashDetector alloc] initWithStorage:storage
+                                                                                    executor:executor];
+    AMATransactionReporter *transactionReporter = [[AMATransactionReporter alloc] init];
+    AMACrashSafeTransactor *transactor = [[AMACrashSafeTransactor alloc] initWithReporter:transactionReporter];
+    AMAKSCrashLoader *loader = [[AMAKSCrashLoader alloc] initWithUnhandledCrashDetector:detector
+                                                                             transactor:transactor];
+    AMACrashEventConverter *converter = [[AMACrashEventConverter alloc] init];
+    AMAExecutor *externalLoaderExecutor = [[AMAExecutor alloc] initWithIdentifier:@"ExternalCrashLoader"];
+    AMAExternalCrashLoader *externalLoader =
+        [[AMAExternalCrashLoader alloc] initWithExecutor:externalLoaderExecutor
+                                              transactor:transactor
+                                               converter:converter];
+    
+    return [self initWithExecutor:executor
+                    ksCrashLoader:loader
+                    stateNotifier:[[AMACrashReportingStateNotifier alloc] init]
+                hostStateProvider:[[AMAHostStateProvider alloc] init]
+                       serializer:[[AMADecodedCrashSerializer alloc] init]
+                    configuration:[[AMAAppMetricaCrashesConfiguration alloc] init]
+              externalCrashLoader:externalLoader];
+}
+
+- (instancetype)initWithExecutor:(id<AMAAsyncExecuting, AMASyncExecuting>)executor
+                   ksCrashLoader:(AMAKSCrashLoader *)ksCrashLoader
+                   stateNotifier:(AMACrashReportingStateNotifier *)stateNotifier
+               hostStateProvider:(id<AMAHostStateProviding>)hostStateProvider
+                      serializer:(AMADecodedCrashSerializer *)serializer
+                   configuration:(AMAAppMetricaCrashesConfiguration *)configuration
+             externalCrashLoader:(AMAExternalCrashLoader *)externalCrashLoader
+{
+    self = [super init];
+    if (self != nil) {
+        _executor = executor;
+        _crashProcessor = nil;
+        _apiKey = nil;
+        _reportersContainer = [[AMACrashReportersContainer alloc] init];
+        _ksCrashLoader = ksCrashLoader;
+        _stateNotifier = stateNotifier;
+        _hostStateProvider = hostStateProvider;
+        _hostStateProvider.delegate = self;
+        _serializer = serializer;
+        _internalConfiguration = configuration;
+        _monitoringState = AMAAppMetricaCrashMonitoringStateNotInitialized;
+        _errorEnvironment = [AMAErrorEnvironment new];
+        _pluginsImpl = [[AMAAppMetricaPluginsImpl alloc] init];
+        _crashObserverManager = [[AMACrashObserverDispatcher alloc] init];
+        _crashHandlerManager = [[AMACrashForwarder alloc] initWithSerializer:serializer];
+        _externalCrashLoader = externalCrashLoader;
+    }
+    return self;
+}
+
+#pragma mark - Public -
+
+- (id<AMAAppMetricaCrashReporting>)reporterForAPIKey:(NSString *)apiKey
+{
+    id<AMAAppMetricaCrashReporting> crashReporter = [self.reportersContainer reporterForAPIKey:apiKey];
+    if (crashReporter == nil) {
+        crashReporter = [[AMACrashReporter alloc] initWithApiKey:apiKey];
+        [self.reportersContainer setReporter:crashReporter forAPIKey:apiKey];
+    }
+    return crashReporter;
+}
+
+- (void)setConfiguration:(AMAAppMetricaCrashesConfiguration *)configuration
+{
+    if (configuration == nil) {
+        return;
+    }
+
+    @synchronized (self) {
+        if (self.monitoringState == AMAAppMetricaCrashMonitoringStateNotInitialized) {
+            self.internalConfiguration = [configuration copy];
+        }
+    }
+}
+
+- (void)initializeCrashMonitoringWithConfiguration:(AMAAppMetricaCrashesConfiguration *)configuration
+{
+    if (configuration == nil) {
+        return;
+    }
+
+    [[self class] setupCrashLogging];
+    [self initializeCrashMonitoringIfNeededWithConfiguration:configuration];
+}
+
+- (void)reportNSError:(NSError *)error onFailure:(void (^)(NSError *))onFailure
+{
+    if (self.isActivated) {
+        [self.mainCrashReporter reportNSError:error
+                                    onFailure:onFailure];
+    }
+}
+
+- (void)reportNSError:(NSError *)error
+              options:(AMAErrorReportingOptions)options
+            onFailure:(void (^)(NSError *))onFailure
+{
+    if (self.isActivated) {
+        [self.mainCrashReporter reportNSError:error
+                                      options:options
+                                    onFailure:onFailure];
+    }
+}
+
+- (void)reportError:(id<AMAErrorRepresentable>)error onFailure:(void (^)(NSError *))onFailure
+{
+    if (self.isActivated) {
+        [self.mainCrashReporter reportError:error
+                                  onFailure:onFailure];
+    }
+}
+
+- (void)reportError:(id<AMAErrorRepresentable>)error
+            options:(AMAErrorReportingOptions)options
+          onFailure:(void (^)(NSError *))onFailure
+{
+    if (self.isActivated) {
+        [self.mainCrashReporter reportError:error
+                                    options:options
+                                  onFailure:onFailure];
+    }
+}
+
+- (void)setErrorEnvironmentValue:(NSString *)value forKey:(NSString *)key
+{
+    [self execute:^{
+        [self.errorEnvironment addValue:value forKey:key];
+        [self.mainCrashReporter setErrorEnvironmentValue:value forKey:key];
+        [self updateCrashContextQuickly:YES];
+        
+    }];
+}
+
+- (void)clearErrorEnvironment
+{
+    [self execute:^{
+        [self.errorEnvironment clearEnvironment];
+        [self.mainCrashReporter clearErrorEnvironment];
+        [self updateCrashContextQuickly:YES];
+        
+    }];
+}
+
+- (id<AMAAppMetricaPlugins>)pluginExtension
+{
+    return self.pluginsImpl;
+}
+
+- (void)enableANRMonitoring
+{
+    [self enableANRMonitoringWithWatchdogInterval:4.0 pingInterval:0.1];
+}
+
+- (void)enableANRMonitoringWithWatchdogInterval:(NSTimeInterval)watchdog pingInterval:(NSTimeInterval)ping
+{
+    if (self.isActivated) {
+        [self enableANRWatchdogWithWatchdogInterval:watchdog pingInterval:ping];
+    }
+}
+
+- (void)registerCrashProvider:(id<AMACrashProviding>)provider
+{
+    if (self.isActivated) {
+        return;
+    }
+    [self.externalCrashLoader registerProvider:provider];
+}
+
+#pragma mark - Internal -
+
+- (void)activate
+{
+    [self prepareCrashMonitoringForActivation];
+
+    AMAAppMetricaCrashesConfiguration *config = nil;
+    @synchronized (self) {
+        _activated = YES;
+        config = self.internalConfiguration;
+    }
+
+    if (config.autoCrashTracking) {
+        if (config.applicationNotRespondingDetection) {
+            [self enableANRWatchdogWithWatchdogInterval:config.applicationNotRespondingWatchdogInterval
+                                           pingInterval:config.applicationNotRespondingPingInterval];
+        }
+        [self setupCrashLoaderWithDetection:config.probablyUnhandledCrashReporting];
+        [self loadCrashReports];
+    }
+    else {
+        [self cleanupCrashes];
+    }
+    [self notifyState];
+    [self updateCrashContextAsync];
+}
+
+- (void)setupMainReporterWithConfiguration:(AMAModuleActivationConfiguration *)configuration
+{
+    AMACrashReporter *crashReporter = (AMACrashReporter *)[self reporterForAPIKey:configuration.apiKey];
+
+    // Merge values set before activation when the main reporter was requested in advance.
+    if (crashReporter.errorEnvironment != self.errorEnvironment) {
+        [crashReporter.errorEnvironment mergeEnvironment:self.errorEnvironment.currentEnvironment
+                                         replaceExisting:YES];
+        self.errorEnvironment = crashReporter.errorEnvironment;
+    }
+    self.apiKey = configuration.apiKey;
+    
+    [self setupCrashProcessorWithCrashReporter:crashReporter ignoredSignals:self.internalConfiguration.ignoredCrashSignals];
+    
+    [self.pluginsImpl setupCrashReporter:crashReporter];
+}
+
+- (void)setupCrashProcessorWithCrashReporter:(AMACrashReporter *)crashReporter ignoredSignals:(NSArray<NSNumber *> *)ignoredSignals
+{
+    [self execute:^{
+        self.crashProcessor = [[AMACrashProcessor alloc] initWithIgnoredSignals:ignoredSignals
+                                                                     serializer:self.serializer
+                                                                  crashReporter:crashReporter];
+    }];
+}
+
+- (void)requestCrashReportingStateWithCompletionQueue:(dispatch_queue_t)completionQueue
+                                      completionBlock:(AMACrashReportingStateCompletionBlock)completionBlock
+{
+    [self.stateNotifier addObserverWithCompletionQueue:completionQueue completionBlock:completionBlock];
+    [self notifyState];
+}
+
+- (void)enableANRWatchdogWithWatchdogInterval:(NSTimeInterval)watchdogInterval
+                                 pingInterval:(NSTimeInterval)pingInterval
+{
+    // disable ANR for extension https://nda.ya.ru/t/gg-V18Dh7KJ7zu
+    if ([AMAPlatformDescription isExtension]) {
+        return;
+    }
+    
+    [self execute:^{
+        [self.ANRDetector cancel];
+        self.ANRDetector = [[AMAANRWatchdog alloc] initWithWatchdogInterval:watchdogInterval
+                                                               pingInterval:pingInterval];
+        self.ANRDetector.delegate = self;
+        [self.ANRDetector start];
+    }];
+}
+
+- (id<AMAAppMetricaCrashReporting>)mainCrashReporter
+{
+    if (self.apiKey != nil) {
+        return [self reporterForAPIKey:self.apiKey];
+    }
+    return nil;
+}
+
+#pragma mark - Properties
+/* Setter methods below allow internal write access to properties marked 'readonly' in the +Private extension.
+In Objective-C, properties can't be redefined in class extensions. Thus, private setters are used to modify
+them while retaining external immutability. Needed for testability. */
+
+- (void)setActivated:(BOOL)activated
+{
+    @synchronized (self) {
+        _activated = activated;
+    }
+}
+
+- (BOOL)isActivated
+{
+    @synchronized (self) {
+        return _activated;
+    }
+}
+
+- (void)setInternalConfiguration:(AMAAppMetricaCrashesConfiguration *)internalConfiguration
+{
+    _internalConfiguration = internalConfiguration;
+}
+
+#pragma mark - Private -
+- (void)handlePluginInitFinished
+{
+    if (AMAAppMetrica.isActivated) {
+        [self.hostStateProvider forceUpdateToForeground];
+    }
+}
+
+#pragma mark - Activation
+
+- (void)prepareCrashMonitoringForActivation
+{
+    [[self class] setupCrashLogging];
+    @synchronized (self) {
+        [self initializeCrashMonitoringLockedWithConfiguration:self.internalConfiguration];
+    }
+}
+
++ (void)setupCrashLogging
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        AMALogConfigurator *configurator = [AMALogConfigurator new];
+        [configurator setupLogWithChannel:AMA_LOG_CHANNEL];
+        [configurator setChannel:AMA_LOG_CHANNEL enabled:NO];
+    });
+}
+
+- (void)initializeCrashMonitoringIfNeededWithConfiguration:(AMAAppMetricaCrashesConfiguration *)configuration
+{
+    if (configuration == nil) {
+        return;
+    }
+
+    @synchronized (self) {
+        [self initializeCrashMonitoringLockedWithConfiguration:configuration];
+    }
+}
+
+- (void)initializeCrashMonitoringLockedWithConfiguration:(AMAAppMetricaCrashesConfiguration *)configuration
+{
+    if (configuration == nil || self.monitoringState != AMAAppMetricaCrashMonitoringStateNotInitialized) {
+        return;
+    }
+    self.monitoringState = AMAAppMetricaCrashMonitoringStateInstalling;
+
+    AMAAppMetricaCrashesConfiguration *frozenConfiguration = [configuration copy];
+    self.internalConfiguration = frozenConfiguration;
+
+    // Avoid quickApplicationState here: it initializes Core configuration and storage before activation.
+    NSDictionary *minimalAppState = @{
+        kAMAAppVersionNameKey : frozenConfiguration.preActivationAppVersion
+            ?: [AMAPlatformDescription appVersion] ?: @"",
+        kAMAAppBuildNumberKey : frozenConfiguration.preActivationAppBuildNumber
+            ?: [AMAPlatformDescription appBuildNumber] ?: @"",
+    };
+    NSDictionary *context = @{
+        kAMACrashContextAppBuildUIDKey : AMABuildUID.buildUID.stringValue ?: @"",
+        kAMACrashContextAppStateKey : minimalAppState,
+    };
+    [AMAKSCrashLoader addCrashContext:context];
+
+    self.ksCrashLoader.crashErrorEnvironmentCallback = frozenConfiguration.crashErrorEnvironmentCallback;
+    if (frozenConfiguration.autoCrashTracking) {
+        [self.ksCrashLoader enableCrashMonitoring];
+    }
+    else {
+        [self.ksCrashLoader enableRequiredMonitoring];
+    }
+    self.monitoringState = AMAAppMetricaCrashMonitoringStateInstalled;
+}
+
+- (void)setupCrashLoaderWithDetection:(BOOL)enabled
+{
+    [self.ksCrashLoader setDelegate:self];
+    self.ksCrashLoader.isUnhandledCrashDetectingEnabled = enabled;
+    [self.ksCrashLoader enableCrashLoader];
+    
+    [self.externalCrashLoader setDelegate:self];
+}
+
+- (void)updateCrashContextAsync
+{
+    [self execute:^{
+        [self updateCrashContextQuickly:NO];
+    }];
+}
+
+- (void)cleanupCrashes
+{
+    [self execute:^{
+        [AMAKSCrashLoader purgeCrashesDirectory];
+    }];
+}
+
+- (void)loadCrashReports
+{
+    [self execute:^{
+        [self.ksCrashLoader loadCrashReports];
+        [self.externalCrashLoader loadCrashReports];
+    }];
+}
+
+- (void)updateCrashContextQuickly:(BOOL)isQuickly
+{
+    AMAApplicationState *appState = isQuickly ?
+        AMAApplicationStateManager.quickApplicationState :
+        AMAApplicationStateManager.applicationState;
+    NSMutableDictionary *appStateDictionary = [appState.dictionaryRepresentation mutableCopy]
+        ?: [NSMutableDictionary dictionary];
+
+    // Keep state selection and publication atomic with respect to early monitoring installation.
+    @synchronized (self) {
+        if (_activated == NO && self.monitoringState == AMAAppMetricaCrashMonitoringStateInstalled) {
+            appStateDictionary[kAMAAppVersionNameKey] = self.internalConfiguration.preActivationAppVersion
+                ?: [AMAPlatformDescription appVersion] ?: @"";
+            appStateDictionary[kAMAAppBuildNumberKey] = self.internalConfiguration.preActivationAppBuildNumber
+                ?: [AMAPlatformDescription appBuildNumber] ?: @"";
+        }
+
+        NSDictionary *context = @{
+            kAMACrashContextAppBuildUIDKey : AMABuildUID.buildUID.stringValue ?: @"",
+            kAMACrashContextAppStateKey : appStateDictionary,
+            kAMACrashContextErrorEnvironmentKey : self.errorEnvironment.currentEnvironment ?: @{},
+            kAMACrashContextAppEnvironmentKey : self.appEnvironment.dictionaryEnvironment ?: @{},
+        };
+        [AMAKSCrashLoader addCrashContext:context];
+    }
+}
+
+- (void)notifyState
+{
+    [self execute:^{
+        if (self.isActivated) {
+            [self.stateNotifier notifyWithEnabled:self.internalConfiguration.autoCrashTracking
+                                crashedLastLaunch:self.ksCrashLoader.crashedLastLaunch];
+        }
+    }];
+}
+
+- (void)execute:(dispatch_block_t)block
+{
+    [self.executor execute:block];
+}
+
+- (NSArray<AMAEventPollingParameters *> *)pollingEvents
+{
+    // TODO: Workaround to remove polling events
+    AMAAppMetricaCrashesConfiguration *configuration = nil;
+    @synchronized (self) {
+        configuration = self.internalConfiguration;
+    }
+    __weak typeof(self) weakSelf = self;
+    return [self.executor syncExecute:^id{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        NSArray<AMADecodedCrash *> *crashes = [AMACollectionUtilities filteredArray:[strongSelf.ksCrashLoader syncLoadCrashReports]
+                                                                      withPredicate:^BOOL(AMADecodedCrash *crash) {
+            if (configuration.ignoredCrashSignals != nil) {
+                return [configuration.ignoredCrashSignals containsObject:@(crash.crash.error.signal.signal)] == NO;
+            }
+            return YES;
+        }];
+        
+        if (crashes.count > 0) {
+            [strongSelf execute:^{
+                for (AMADecodedCrash *crash in crashes) {
+                    if (crash.crash.error.type == AMACrashTypeMainThreadDeadlock) {
+                        [strongSelf.crashObserverManager notifyANR:crash];
+                        [strongSelf.crashHandlerManager processANR:crash];
+                    }
+                    else {
+                        [strongSelf.crashObserverManager notifyCrash:crash];
+                        [strongSelf.crashHandlerManager processCrash:crash];
+                    }
+                }
+            }];
+        }
+
+        return [AMACollectionUtilities mapArray:crashes withBlock:^AMAEventPollingParameters *(AMADecodedCrash *item) {
+            return [strongSelf.serializer eventParametersFromDecodedData:item error:NULL];
+        }];
+    }];
+}
+
+#pragma mark - AMAModuleActivationDelegate
+
++ (void)willActivateWithConfiguration:(__unused AMAModuleActivationConfiguration *)configuration
+{
+    AMAAppMetricaCrashes *crashes = [[self class] crashes];
+    [crashes prepareCrashMonitoringForActivation];
+    // Initialize reporter before activation to ensure it is available when crashes are loaded.
+    [crashes setupMainReporterWithConfiguration:configuration];
+    [crashes activate];
+}
+
++ (void)didActivateWithConfiguration:(__unused AMAModuleActivationConfiguration *)configuration
+{
+}
+
+#pragma mark - AMAEventPollingDelegate
+
++ (NSArray<AMAEventPollingParameters *> *)pollingEvents
+{
+    return [[[self class] crashes] pollingEvents];
+}
+
++ (void)setupAppEnvironment:(AMAEnvironmentContainer *)appEnvironment
+{
+    AMAAppMetricaCrashes *crashes = [[self class] crashes];
+    [crashes setupAppEnvironment:appEnvironment];
+}
+
+- (void)setupAppEnvironment:(AMAEnvironmentContainer *)appEnvironment
+{
+    [self execute:^{
+        [self.appEnvironment removeObserver:self];
+        
+        self.appEnvironment = appEnvironment;
+        
+        [self updateCrashContextQuickly:NO];
+        
+        [self.appEnvironment addObserver:self withBlock:^(AMAAppMetricaCrashes *crashes, AMAEnvironmentContainer *e) {
+            [crashes updateCrashContextAsync];
+        }];
+    }];
+}
+
+#pragma mark - AMACrashLoaderDelegate
+
+- (void)crashLoader:(id<AMACrashLoading>)crashLoader
+       didLoadCrash:(AMADecodedCrash *)decodedCrash
+          withError:(NSError *)error
+{
+    __weak typeof(self) weakSelf = self;
+    [self execute:^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        [strongSelf.crashProcessor processCrash:decodedCrash withError:error];
+
+        if (decodedCrash != nil) {
+            [strongSelf.crashObserverManager notifyCrash:decodedCrash];
+            [strongSelf.crashHandlerManager processCrash:decodedCrash];
+        }
+    }];
+}
+
+- (void)crashLoader:(id<AMACrashLoading>)crashLoader
+         didLoadANR:(AMADecodedCrash *)decodedCrash
+          withError:(NSError *)error
+{
+    __weak typeof(self) weakSelf = self;
+    [self execute:^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        [strongSelf.crashProcessor processANR:decodedCrash withError:error];
+
+        if (decodedCrash != nil) {
+            [strongSelf.crashObserverManager notifyANR:decodedCrash];
+            [strongSelf.crashHandlerManager processANR:decodedCrash];
+        }
+    }];
+}
+
+- (void)crashLoader:(id<AMACrashLoading>)crashLoader didDetectProbableUnhandledCrash:(AMAUnhandledCrashType)crashType
+{
+    if (crashType == AMAUnhandledCrashForeground || crashType == AMAUnhandledCrashBackground) {
+        AMALogInfo(@"Reporting probably unhandled crash");
+        NSString *errorMessage = [[self class] errorMessageForProbableUnhandledCrash:crashType];
+        NSError *error = [AMAErrorUtilities internalErrorWithCode:AMAAppMetricaInternalEventErrorCodeProbableUnhandledCrash
+                                                      description:errorMessage];
+        [self.crashProcessor processError:error];
+
+        [self.crashObserverManager notifyProbableUnhandledCrash:errorMessage];
+    }
+}
+
++ (NSString *)errorMessageForProbableUnhandledCrash:(AMAUnhandledCrashType)crashType
+{
+    NSString *errorMessage = nil;
+    if(crashType == AMAUnhandledCrashForeground) {
+        errorMessage = @"Detected probable unhandled exception when app was "
+                        "in foreground. Exception mean that previous working session have not finished correctly.";
+    }
+    else if(crashType == AMAUnhandledCrashBackground) {
+        errorMessage = @"Detected probable unhandled exception when app was "
+                        "in background. Exception mean that previous working session have not finished correctly.";
+    }
+    return errorMessage;
+}
+
+#pragma mark - AMAANRWatchdogDelegate
+
+- (void)ANRWatchdogDidDetectANR:(AMAANRWatchdog *)detector
+{
+    [self execute:^{
+        AMALogInfo(@"Reporting of ANR crash.");
+        [self.ksCrashLoader reportANR];
+    }];
+}
+
+#pragma mark - AMAHostStateProviderDelegate
+
+- (void)hostStateDidChange:(AMAHostAppState)hostState
+{
+    switch (hostState) {
+        case AMAHostAppStateBackground:
+            [self.ANRDetector cancel];
+            break;
+        case AMAHostAppStateForeground:
+            [self.ANRDetector start];
+            break;
+        default:
+            break;
+    }
+}
+
+#pragma mark - Crash Observer Methods
+
+- (void)registerCrashObserver:(AMACrashObserverConfiguration *)configuration
+{
+    if (configuration == nil) {
+        return;
+    }
+
+    [self.crashObserverManager registerObserverConfiguration:configuration];
+}
+
+- (void)registerCrashHandler:(id<AMACrashFilteringProxy>)handler
+{
+    if (handler == nil) {
+        return;
+    }
+
+    [self.crashHandlerManager registerHandler:handler];
+}
+
+@end

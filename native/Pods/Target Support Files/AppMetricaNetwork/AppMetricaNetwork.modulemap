@@ -1,0 +1,6 @@
+module AppMetricaNetwork {
+  umbrella header "AppMetricaNetwork-umbrella.h"
+
+  export *
+  module * { export * }
+}
