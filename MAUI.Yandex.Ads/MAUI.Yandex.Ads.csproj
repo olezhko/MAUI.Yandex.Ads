@@ -16,7 +16,21 @@
 		       <MauiXaml Update="MyPage.xaml" Inflator="Runtime" /> (force runtime inflation) -->
 		<MauiXamlInflator>SourceGen</MauiXamlInflator>
 
+		<PackageId>MAUI.Yandex.Ads</PackageId>
+		<Version>1.0.0-beta</Version>
+		<Authors>Aleh Ladyka</Authors>
+		<Description>Yandex Mobile Ads banner control (AdBannerView) for .NET MAUI on Android and iOS.</Description>
+		<PackageTags>maui;yandex;ads;banner;android;ios</PackageTags>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<RepositoryUrl>https://github.com/olezhko/MAUI.Yandex.Ads</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageProjectUrl>https://github.com/olezhko/MAUI.Yandex.Ads</PackageProjectUrl>
+		<PackageReleaseNotes>Initial release.</PackageReleaseNotes>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<NoWarn>$(NoWarn);CS1591</NoWarn>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
@@ -226,9 +240,29 @@
     </PackageReference>
   </ItemGroup>
 
+  <!--
+    The binding is shipped inside this package (not as its own NuGet dependency):
+    PrivateAssets="all" drops the package dependency, and the target below packs the
+    binding dll plus its native resources (YandexAdsBridge.xcframework) into lib/net10.0-ios.
+  -->
   <ItemGroup Condition="$(TargetFramework.Contains('-ios'))">
-    <ProjectReference Include="..\MAUI.Yandex.Ads.iOS.Binding\MAUI.Yandex.Ads.iOS.Binding.csproj" />
+    <ProjectReference Include="..\MAUI.Yandex.Ads.iOS.Binding\MAUI.Yandex.Ads.iOS.Binding.csproj" PrivateAssets="all" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);PackIosBindingOutput</TargetsForTfmSpecificBuildOutput>
+    <!-- NuGet drops build output with unknown extensions; the binding's native resources are a .zip. -->
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.zip</AllowedOutputExtensionsInPackageBuildOutputFolder>
+  </PropertyGroup>
+
+  <Target Name="PackIosBindingOutput" DependsOnTargets="ResolveReferences" Condition="$(TargetFramework.Contains('-ios'))">
+    <ItemGroup>
+      <_IosBindingDll Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.ReferenceSourceTarget)' == 'ProjectReference' And '%(ReferenceCopyLocalPaths.Extension)' == '.dll'" />
+      <_IosBindingResources Include="@(_IosBindingDll->'%(RootDir)%(Directory)%(Filename).resources.zip')" />
+      <BuildOutputInPackage Include="@(_IosBindingDll)" />
+      <BuildOutputInPackage Include="@(_IosBindingResources)" Condition="Exists('%(Identity)')" />
+    </ItemGroup>
+  </Target>
 
   <Target Name="UpdateYandexSkadIds" BeforeTargets="BeforeBuild"
           Condition="$(TargetFramework.Contains('-ios')) And $([MSBuild]::IsOSPlatform('OSX'))">
