@@ -42,13 +42,13 @@ An incremental iOS build does not always refresh the app bundle's `Info.plist`. 
 - `AdBannerView.cs` is the cross-platform `View`. It has the bindable properties `AdUnitId` and `AdWidth` and the events `AdLoaded` and `AdFailedToLoad(string error)`. Handlers fire the events through the `internal` methods `RaiseAdLoaded` and `RaiseAdFailedToLoad`.
 - `YandexAdsMauiExtensions.UseYandexAds()` registers `AdBannerViewHandler` under `#if ANDROID` / `#elif IOS`. A new platform has to be added here as well.
 - The two handlers are not shared partials. Android: `Platforms/Android/AdBannerViewHandler.cs`, namespace `MAUI.Yandex.Ads`. iOS: `Platforms/iOS/YandexBannerViewHandler.cs`, class `AdBannerViewHandler` in namespace `MAUI.Yandex.Ads.Platforms.iOS`. Only `AdUnitId` is in the property mappers, and a change to it reloads the banner.
-- `AdWidth` is used only on Android (`BannerAdSize.StickySize`). The iOS handler ignores it and uses the key window's safe-area width (`YABBannerAd.Sticky(width)`). On iOS the handler sets `HeightRequest` from the banner's `ContentSize` after it loads.
+- `AdWidth` is used only on Android (`BannerAdSize.Sticky`). The iOS handler ignores it and uses the key window's safe-area width (`YABBannerAd.Sticky(width)`). On iOS the handler sets `HeightRequest` from the banner's `ContentSize` after it loads.
 
 ### Android native SDK
 
-- The SDK is fetched from Maven with `<AndroidMavenLibrary Include="com.yandex.android:mobileads" ...>`. Its many transitive Maven dependencies (`com.yandex.div`, `io.appmetrica.analytics`, `yatagan`, `varioqub`, …) are listed explicitly with `Bind="false"`. The ones that have NuGet equivalents (AndroidX, Kotlin, OkHttp, Play Services) come in as `PackageReference`s instead. When you bump the SDK version, update this dependency list together with it. Java dependency verification errors usually mean an entry is missing.
+- The SDK is fetched from Maven with `<AndroidMavenLibrary Include="com.yandex.android:mobileads" ...>`. Its many transitive Maven dependencies (`io.appmetrica.analytics`, `varioqub`, …) are listed explicitly with `Bind="false"`. The ones that have NuGet equivalents (AndroidX, Kotlin, OkHttp, Play Services) come in as `PackageReference`s instead. When you bump the SDK version, update this dependency list together with it. Java dependency verification errors usually mean an entry is missing.
 - `Transforms/Metadata.xml` fixes up the generated bindings. `BannerAdView` and `BannerAdSize` extend obfuscated internal classes that get no C# type, so they are re-parented to `RelativeLayout` and `Object`. A `CallToActionView.getText` override that breaks compilation is removed. A new SDK version may change the obfuscated names and need new transforms.
-- The library does not call `MobileAds.Initialize`. The consuming app does that itself, as `MAUI.Yandex.Ads.Sample/Platforms/Android/MainActivity.cs` shows using `ActionInitializationListener` (a helper exposed by the library).
+- The library does not call `YandexAds.Initialize` (named `MobileAds` before SDK 8). The consuming app does that itself, as `MAUI.Yandex.Ads.Sample/Platforms/Android/MainActivity.cs` shows using `ActionInitializationListener` (a helper exposed by the library).
 
 ### iOS native SDK (Swift wrapper + slim binding)
 

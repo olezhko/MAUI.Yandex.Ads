@@ -34,7 +34,6 @@ public partial class AdBannerViewHandler
     private static void MapAdUnitId(
         AdBannerViewHandler handler, AdBannerView view)
     {
-        handler.PlatformView.SetAdUnitId(view.AdUnitId);
         handler.LoadAd(handler.PlatformView);
     }
 
@@ -42,9 +41,8 @@ public partial class AdBannerViewHandler
     {
         if (string.IsNullOrEmpty(VirtualView.AdUnitId)) return;
 
-        banner.SetAdUnitId(VirtualView.AdUnitId);
-        banner.AdSize = BannerAdSize.StickySize(Context, VirtualView.AdWidth);
-        banner.LoadAd(new AdRequest.Builder().Build());
+        banner.AdSize = BannerAdSize.Sticky(Context, VirtualView.AdWidth);
+        banner.LoadAd(new AdRequest.Builder(VirtualView.AdUnitId).Build());
     }
 
     // ── Event listener ────────────────────────────────────────────────────
@@ -57,8 +55,6 @@ public partial class AdBannerViewHandler
         public void OnAdFailedToLoad(AdRequestError error)
             => _view.RaiseAdFailedToLoad(error.Description);
         public void OnAdClicked() { }
-        public void OnLeftApplication() { }
-        public void OnReturnedToApplication() { }
         public void OnImpression(IImpressionData? data) { }
     }
 }

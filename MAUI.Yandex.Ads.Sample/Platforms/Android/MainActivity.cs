@@ -11,7 +11,7 @@ namespace MAUI.Yandex.Ads.Sample
         protected override void OnCreate(Bundle? savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
-            MobileAds.Initialize(this, new ActionInitializationListener(() => { }));
+            YandexAds.Initialize(this, new ActionInitializationListener(() => { }));
         }
     }
 }
